@@ -11,10 +11,11 @@ library(janitor)
 library(lubridate)
 library(readr)
 library(hms)
+library(fs)
 ```
 
 ```{r data, message=FALSE, echo=FALSE}
-
+unzip("chicago-rides.csv.zip")
 
 x <- read_csv("chicago-rides.csv") %>% 
   clean_names() %>% 
@@ -27,12 +28,15 @@ x <- read_csv("chicago-rides.csv") %>%
          start_time = str_sub(trip_start_timestamp, 12, 22),
          end_time = str_sub(trip_end_timestamp, 12, 22),
          start_hour = str_sub(trip_start_timestamp, 12, 13),
-         start_am_pm = str_sub(trip_start_timestamp, 21, 22)) %>% 
+         start_am_pm = str_sub(trip_start_timestamp, 21, 22),
+         end_hour = str_sub(trip_end_timestamp, 12, 13),
+         end_am_pm = str_sub(trip_end_timestamp, 21, 22)) %>% 
   mutate(start_date = mdy(start_date), 
          end_date = mdy(end_date),
          format_start_date = format(start_date, "%B %d, %Y"),
          format_end_date = format(end_date, "%B %d, %Y"),
-         start_hour = paste(start_hour, start_am_pm, sep = "")) %>% 
+         start_hour = paste(start_hour, start_am_pm, sep = ""),
+         end_hour = paste(end_hour, start_am_pm, sep = "")) %>% 
   mutate(start_hour = case_when(start_hour == "12AM" ~ "00", 
                                 start_hour == "01AM" ~ "01",
                                 start_hour == "02AM" ~ "02",
@@ -57,7 +61,35 @@ x <- read_csv("chicago-rides.csv") %>%
                                 start_hour == "09PM" ~ "21",
                                 start_hour == "10PM" ~ "22",
                                 start_hour == "11PM" ~ "23"),
-         start_hour = as.numeric(start_hour))
+         start_hour = as.numeric(start_hour)) %>% 
+    mutate(end_hour = case_when(end_hour == "12AM" ~ "00", 
+                                end_hour == "01AM" ~ "01",
+                                end_hour == "02AM" ~ "02",
+                                end_hour == "03AM" ~ "03",
+                                end_hour == "04AM" ~ "04",
+                                end_hour == "05AM" ~ "05",
+                                end_hour == "06AM" ~ "06",
+                                end_hour == "07AM" ~ "07",
+                                end_hour == "08AM" ~ "08",
+                                end_hour == "09AM" ~ "09",
+                                end_hour == "10AM" ~ "10",
+                                end_hour == "11AM" ~ "11",
+                                end_hour == "12PM" ~ "12",
+                                end_hour == "01PM" ~ "13",
+                                end_hour == "02PM" ~ "14",
+                                end_hour == "03PM" ~ "15",
+                                end_hour == "04PM" ~ "16",
+                                end_hour == "05PM" ~ "17",
+                                end_hour == "06PM" ~ "18",
+                                end_hour == "07PM" ~ "19",
+                                end_hour == "08PM" ~ "20",
+                                end_hour == "09PM" ~ "21",
+                                end_hour == "10PM" ~ "22",
+                                end_hour == "11PM" ~ "23"),
+         end_hour = as.numeric(end_hour)) %>% 
+  select(-start_am_pm, -end_am_pm, -pickup_centroid_location, -dropoff_centroid_location)
+
+file_delete(c("chicago-rides.csv", "__MACOSX"))
 ```
 
 ```{r write, message=FALSE, echo=FALSE}
