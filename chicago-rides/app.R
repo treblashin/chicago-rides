@@ -95,7 +95,7 @@ ui <- navbarPage(
 
   tabPanel(
     title = "Trip Locations",
-    h4("Ride Share Pickup Locations"),
+    h4("Ride Share Locations"),
     sidebarLayout(
       sidebarPanel(
         sliderInput(inputId = "hour",
@@ -112,7 +112,12 @@ ui <- navbarPage(
                            selected = c("December 04, 2018", "December 25, 2018"))
       ),
       mainPanel(
-        leafletOutput("leafletPlot")
+        tabsetPanel(
+          tabPanel(title = "Pickup Locations", 
+                   leafletOutput("leafletpickupPlot")),
+          tabPanel(title = "Dropoff Locations", 
+                   leafletOutput("leafletdropoffPlot"))
+        )
       )
     )
   ),
@@ -166,12 +171,26 @@ server <- function(input, output) {
         y = "Number of Trips"
       )
   })
-    
-   output$leafletPlot <- renderLeaflet({
+   
+   output$leafletpickupPlot <- renderLeaflet({
      y <- y %>% 
-       select(pickup_centroid_longitude, pickup_centroid_latitude, start_hour, start_date, format_start_date) %>% 
        mutate(longitude = as.numeric(pickup_centroid_longitude),
               latitude = as.numeric(pickup_centroid_latitude))
+     data <- subset(y, start_hour == input$hour)
+     data <- subset(data, format_start_date == input$startdateleaflet)
+     
+     map <- data %>%
+       leaflet() %>%
+       addTiles() %>%
+       addCircleMarkers(radius = 0.5, opacity = 0.25, fillColor = ~pal(start_date)) %>%
+       setView(lat = 41.835, lng = -87.722, zoom = 10.25) 
+   })
+
+   output$leafletdropoffPlot <- renderLeaflet({
+     y <- y %>% 
+       select(dropoff_centroid_longitude, dropoff_centroid_latitude, start_hour, start_date, format_start_date) %>% 
+       mutate(longitude = as.numeric(dropoff_centroid_longitude),
+              latitude = as.numeric(dropoff_centroid_latitude))
      data <- subset(y, start_hour == input$hour)
      data <- subset(data, format_start_date == input$startdateleaflet)
      
@@ -181,6 +200,7 @@ server <- function(input, output) {
        addCircleMarkers(radius = 0.5, opacity = 0.25) %>%
        setView(lat = 41.835, lng = -87.722, zoom = 10.25) 
    })
+   
 
    output$faretipPlot <- renderPlot({
       ggplot(data = start_date_tips(), aes(x = fare, y = tip, color = format_start_date)) + 
