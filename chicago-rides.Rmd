@@ -1,0 +1,73 @@
+---
+title: "chicago-rides"
+author: "Albert Shin"
+date: "4/28/2019"
+output: html_document
+---
+
+```{r setup, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(readr)
+library(hms)
+```
+
+```{r data, message=FALSE, echo=FALSE}
+
+
+x <- read_csv("chicago-rides.csv") %>% 
+  clean_names() %>% 
+  filter(!is.na(trip_start_timestamp)) %>% 
+  filter(!is.na(trip_end_timestamp)) %>% 
+  filter(!is.na(pickup_centroid_latitude)) %>%
+  filter(!is.na(pickup_centroid_longitude)) %>% 
+  mutate(start_date = str_sub(trip_start_timestamp, 0, 10),
+         end_date = str_sub(trip_end_timestamp, 0, 10),
+         start_time = str_sub(trip_start_timestamp, 12, 22),
+         end_time = str_sub(trip_end_timestamp, 12, 22),
+         start_hour = str_sub(trip_start_timestamp, 12, 13),
+         start_am_pm = str_sub(trip_start_timestamp, 21, 22)) %>% 
+  mutate(start_date = mdy(start_date), 
+         end_date = mdy(end_date),
+         format_start_date = format(start_date, "%B %d, %Y"),
+         format_end_date = format(end_date, "%B %d, %Y"),
+         start_hour = paste(start_hour, start_am_pm, sep = "")) %>% 
+  mutate(start_hour = case_when(start_hour == "12AM" ~ "00", 
+                                start_hour == "01AM" ~ "01",
+                                start_hour == "02AM" ~ "02",
+                                start_hour == "03AM" ~ "03",
+                                start_hour == "04AM" ~ "04",
+                                start_hour == "05AM" ~ "05",
+                                start_hour == "06AM" ~ "06",
+                                start_hour == "07AM" ~ "07",
+                                start_hour == "08AM" ~ "08",
+                                start_hour == "09AM" ~ "09",
+                                start_hour == "10AM" ~ "10",
+                                start_hour == "11AM" ~ "11",
+                                start_hour == "12PM" ~ "12",
+                                start_hour == "01PM" ~ "13",
+                                start_hour == "02PM" ~ "14",
+                                start_hour == "03PM" ~ "15",
+                                start_hour == "04PM" ~ "16",
+                                start_hour == "05PM" ~ "17",
+                                start_hour == "06PM" ~ "18",
+                                start_hour == "07PM" ~ "19",
+                                start_hour == "08PM" ~ "20",
+                                start_hour == "09PM" ~ "21",
+                                start_hour == "10PM" ~ "22",
+                                start_hour == "11PM" ~ "23"),
+         start_hour = as.numeric(start_hour))
+```
+
+```{r write, message=FALSE, echo=FALSE}
+write_rds(x = x, "x.rds")
+```
+
+```{r sampling, message=FALSE, echo=FALSE}
+y <- x[sample(nrow(x), 25000), ]
+
+write_csv(y, "y.csv")
+```
+
+
