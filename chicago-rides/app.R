@@ -76,13 +76,37 @@ ui <- navbarPage(
      )
    ),
 
-  # Second tab, Basic information, contains distribution histograms of variables
-  # in the data specifically the frequency of certain trip mileages and trip
-  # fares.
+  # The purpose of the insights tab is to provide important context and
+  # background on the data that otherwise might not be noticeable, especially on
+  # the other plots.
    
   tabPanel(
-     title = "Basic Information",
-     h4("Basic Information"),
+    title = "Insights", 
+    h4("Insights"),
+    mainPanel(
+      
+      # PlotOutput that creates a plot showing the number of observations based
+      # on the start date.
+      # I used h6() to insert text and an interpretation of the data.s
+      
+      plotOutput("nPlot"),
+      h6("Though it is difficult to see in other graphics, the data indicates 
+         there is a significant difference in the number of rides started on 
+         December 4th, 2018 and December 25th, 2018. The number of rides on 
+         December 4th is over double the amount of rides on December 25th.
+         A possible explanation (especially as both days are on a Tuesday, so
+         there is no day of the week variation or bias) is that people are less
+         likely to be traveling on Christmas day.")
+    )
+  ),
+   
+  # Next tab, Distribution information, contains distribution histograms of
+  # variables in the data specifically the frequency of certain trip mileages
+  # and trip fares.
+   
+  tabPanel(
+     title = "Distribution Information",
+     h4("Distribution Information"),
      sidebarLayout(
        sidebarPanel(
          
@@ -125,7 +149,7 @@ ui <- navbarPage(
      )
   ),
 
-  # Third tab displays tip data from the rides. The tab has scatterplots
+  # Next tab displays tip data from the rides. The tab has scatterplots
   # comparing the tip amounts with other ride variables.
   
   tabPanel(
@@ -178,31 +202,36 @@ ui <- navbarPage(
     h4("About/Acknowledgments"),
     mainPanel(
       h4("Goals and Objectives"),
-      h6("The goal of this project is to look at ride-sharing data in the city of Chicago, specifically at rides with a 
-         start date of December 4th, 2018 and December 25th, 2018, to compare ride-sharing on the Christmas holiday and 
-         a non-holiday day in December that is the same day of the week as Christmas."),
+      h6("The goal of this project is to look at ride-sharing data in the city 
+         of Chicago, specifically at rides with a start date of December 4th, 2018
+         and December 25th, 2018, to compare ride-sharing on the Christmas holiday 
+         and a non-holiday day in December that is the same day of the week as 
+         Christmas."),
       br(),
       h4("Methodology"),
-      h6("The original dataset contains over 17 million rows of data, spanning dates from November to December 2018. Due
-         to the volume of data, I decided to look at specific dates —— in particular, December 4th and December 25th.
-         When selecting for rows that have a start date of December 4th or December 25th, there are still over 300 thousand
-         rows. For the sake of clarity in the plots and graphs used in this app, I used a random sample of 25 thousand rows.
-         This provides enough data points to provide a reasonable representation of the data, while simultaneously making 
-         certain plots and graphs easier to read."),
+      h6("The original dataset contains over 17 million rows of data, spanning 
+         dates from November to December 2018. Due to the volume of data, I decided
+         to look at specific dates — in particular, December 4th and December 25th.
+         When selecting for rows that have a start date of December 4th or December 
+         25th, there are still over 300 thousand rows. For the sake of clarity in the 
+         plots and graphs used in this app, I used a random sample of 25 thousand rows.
+         This provides enough data points to provide a reasonable representation of the 
+         data, while simultaneously making certain plots and graphs easier to read."),
       br(),
       h4("Disclaimer"),
       h6("The Shiny App may take a while to load due to the volume of data points."),
       br(),
       h4("Sources"),
-      h6("Data from the city of Chicago data portal can be found", a("here.", href="https://data.cityofchicago.org/Transportation/Transportation-Network-Providers-Trips/m6dm-c72p/data"),
+      h6("Data from the city of Chicago data portal can be found", 
+         a("here.", href="https://data.cityofchicago.org/Transportation/Transportation-Network-Providers-Trips/m6dm-c72p/data"),
          "The GitHub repository can be found",
          a("here.", href="https://github.com/treblashin/chicago-rides"), 
          "Shiny App created by Albert Shin ('22)."),
       h6("Questions about the project? Contact me at albertshin@college.harvard.edu."),
       br(), 
       h4("Thank You"),
-      h6("Thank you Preceptor, Albert, Jacob, and everyone in Gov 1005 for an amazing semester — 
-         this project would not have been possible without you!")
+      h6("Thank you Preceptor, Albert, Jacob, and everyone in Gov 1005 for an amazing 
+         semester — this project would not have been possible without your help.")
     )
   )
 )
@@ -232,6 +261,34 @@ server <- function(input, output) {
   start_date <- reactive({
     req(input$startdatebasic)
     filter(y, format_start_date %in% input$startdatebasic)
+  })
+
+  output$nPlot <- renderPlot({
+    
+    # the data in use is the regular dataset y. We assign it to z after creating
+    # so transformations. We group by the start date of the trip. We then create
+    # a total column that counts up the number of rows. Finally we ungroup.
+    
+    z <- y %>% 
+      group_by(format_start_date) %>% 
+      mutate(total = n()) %>% 
+      ungroup()
+    
+    ggplot(data = z, aes(x = format_start_date)) + 
+      
+      # Use geom_histogram() to create a histogram plot. Make the bins dynamic
+      # using input$basicbins, which takes the number that the user inputs for
+      # the number of bins.
+      
+      geom_bar() + 
+      
+      # use labs() to title the graph. 
+      
+      labs(
+        title = "Number of Trips by Start Date", 
+        x = "Trip Start Date",
+        y = "Number of Trips"
+      )
   })
   
   # Creates a ggplot histogram using renderplot. This is the output of the miles
