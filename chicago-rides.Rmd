@@ -6,6 +6,8 @@ output: html_document
 ---
 
 ```{r setup, message=FALSE, echo=FALSE}
+# installing the necessary packages
+
 library(tidyverse)
 library(janitor)
 library(lubridate)
@@ -15,26 +17,75 @@ library(fs)
 ```
 
 ```{r data, message=FALSE, echo=FALSE}
+# because the raw file is so large (over 130 megabytes), causing complications
+# when pushing to GitHub especially, I decided to zip the file so that it could
+# be pushed to GitHub. To get the data, I used unzip().
+
 unzip("chicago-rides.csv.zip")
+
+# reading the csv using read_csv from the readr package for better performance.
+# The names of the columns were not in lowercase, underscored (_) form, so I
+# used clean_names from the janitor package to make the names easier to work
+# with.
 
 x <- read_csv("chicago-rides.csv") %>% 
   clean_names() %>% 
+  
+# filtered out the values that did not have a trip start timestamp or a trip end
+# timestamp, and those that did not have a pickup centroid latitude or a pickup
+# centroid longitude.
+    
   filter(!is.na(trip_start_timestamp)) %>% 
   filter(!is.na(trip_end_timestamp)) %>% 
   filter(!is.na(pickup_centroid_latitude)) %>%
   filter(!is.na(pickup_centroid_longitude)) %>% 
+  
+# Used a series of mutates in order to get the data in the format that I wanted.
+# The data was pretty messy, especially the dates, so it took a lot of
+# manipulation to get the data in a format I wanted. My goal was to isolate the
+# hour of the day, as well as what day it was. The date columns were all in
+# character type when I looked through the dataset, so my goal was to change
+# them to date type (or double type for the hour of the day). To get start_date
+# and end_date, I used str_sub to get just the month, day, and year from
+# trip_start_timestamp and trip_end_timestamp, respecively.
+    
   mutate(start_date = str_sub(trip_start_timestamp, 0, 10),
          end_date = str_sub(trip_end_timestamp, 0, 10),
+         
+# for start_time and end_time, I used str_sub to extract just the hour, minute,
+# second, and AM/PM symbol (the data was in a 12 hour format instead of a 24
+# hour one, unfortunately. Much of my time was spent trying to convert the 12
+# hour format to the 24 hour format, which can be seen in laster code). I also
+# extracted the hour, and the AM/PM symbol separately for ride start and ride
+# end times and put those values in two separate columns.
+                  
          start_time = str_sub(trip_start_timestamp, 12, 22),
          end_time = str_sub(trip_end_timestamp, 12, 22),
          start_hour = str_sub(trip_start_timestamp, 12, 13),
          start_am_pm = str_sub(trip_start_timestamp, 21, 22),
          end_hour = str_sub(trip_end_timestamp, 12, 13),
          end_am_pm = str_sub(trip_end_timestamp, 21, 22)) %>% 
+  
+# second round of mutates was to get the dates formatted correctly. Using the
+# lubridate package, I used mdy() to get the start_date and end_date columns to
+# the date data type. I then wanted a more formal and written-out version of the
+# dates, so I used %B, %d, and %Y to format the dates into a format that was
+# easily readible (December 4, 2018).
+    
   mutate(start_date = mdy(start_date), 
          end_date = mdy(end_date),
          format_start_date = format(start_date, "%B %d, %Y"),
          format_end_date = format(end_date, "%B %d, %Y"),
+         
+# After finishing with the dates, I then edited the times. Lubridate and other
+# date manipulation techniques produced errors on my data, so instead, I used
+# paste() to paste the two columns start_hour and start_am_pm together (these
+# are both currently character data types). This mutated the start_hour column
+# to include the 12-hour hour value and the AM/PM sign (9PM, 12AM). I then used
+# case_when in order to change the 12 hour times to 24-hour hour numbers. I then
+# used as.numeric() in order to change the hour values from character type to
+# numeric.
+
          start_hour = paste(start_hour, start_am_pm, sep = ""),
          end_hour = paste(end_hour, start_am_pm, sep = "")) %>% 
   mutate(start_hour = case_when(start_hour == "12AM" ~ "00", 
@@ -87,16 +138,25 @@ x <- read_csv("chicago-rides.csv") %>%
                                 end_hour == "10PM" ~ "22",
                                 end_hour == "11PM" ~ "23"),
          end_hour = as.numeric(end_hour)) %>% 
-  select(-start_am_pm, -end_am_pm, -pickup_centroid_location, -dropoff_centroid_location)
 
+# I then removed the unnecessary rows using select(), and then deleted the
+# unzipped file and the accompanying folder.
+    
+  select(-start_am_pm, -end_am_pm, -pickup_centroid_location, -dropoff_centroid_location)
 file_delete(c("chicago-rides.csv", "__MACOSX"))
 ```
 
-```{r write, message=FALSE, echo=FALSE}
-write_rds(x = x, "x.rds")
-```
-
 ```{r sampling, message=FALSE, echo=FALSE}
+# Create a random sample of the data using sample(). I decided to create a
+# sample with size 25000 because the number of data points was too much to
+# create clear and informative graphics (the points, especially the map
+# graphics, overlapped even with low levels of transparency and thus did not
+# provide a lot of insight). A sample size of 25000 is definitely much smaller
+# than the 300000 plus points that I started off with, but it is definitely big
+# enough to be representative of the data that the points are from.
+# After sampling and storing those rows into y, I wrote to a .csv file to read
+# into on the app.R.
+
 y <- x[sample(nrow(x), 25000), ]
 
 write_csv(y, "y.csv")
