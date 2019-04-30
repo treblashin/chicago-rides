@@ -222,6 +222,11 @@ ui <- navbarPage(
       h6("The Shiny App may take a while to load due to the volume of data points."),
       br(),
       h4("Sources"),
+      h6("I first stumbled on this data from sifting through an email newsletter called
+         Data is Plural by Jeremy Singer Vine. Data is plural sends out a number of interesting 
+         datasets every week to those subscribed to the newsletter. More information 
+         regarding Data is Plural can be found", 
+         a("here.", href = "https://tinyletter.com/data-is-plural")),
       h6("Data from the city of Chicago data portal can be found", 
          a("here.", href="https://data.cityofchicago.org/Transportation/Transportation-Network-Providers-Trips/m6dm-c72p/data"),
          "The GitHub repository can be found",
