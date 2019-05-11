@@ -90,13 +90,28 @@ ui <- navbarPage(
       # I used h6() to insert text and an interpretation of the data.s
       
       plotOutput("nPlot"),
-      h6("Though it is difficult to see in other graphics, the data indicates 
+      h6("Though it is difficult to see in other graphics, the histogram indicates 
          there is a significant difference in the number of rides started on 
          December 4th, 2018 and December 25th, 2018. The number of rides on 
          December 4th is over double the amount of rides on December 25th.
          A possible explanation (especially as both days are on a Tuesday, so
          there is no day of the week variation or bias) is that people are less
-         likely to be traveling on Christmas day.")
+         likely to be traveling on Christmas day."), 
+      br(),
+      plotOutput("tipfreqPlot"),
+      h6('The difference in number of rides throughout December 4th and December 25th 
+         can be seen even more clearly in the line graph above. At every hour of the day,
+         there are more rides recorded for December 4th compared to December 25th.
+         This graph shows interesting patterns on December 4th and December 25th throughout
+         the day. On December 25th, for instance, the line is relatively smooth—rides increase
+         in volume from 12AM to 10-11PM, where there is a slight dip as times go back to 12AM.
+         Peak rideshare calls are in the evening.
+         On the other hand, on December 4th, there are significant "peaks" that can be seen throughout
+         the day. December 4th is a Tuesday, and unlike the 25th, which is a Federal Holiday, many people
+         are going to work. This could be a major reason why there are spikes in ride share calls in hours
+         7-8AM and 5-6 PM, as people are going to work in the morning and are coming from work in the 
+         afternoon/evening. The data is even more suggestive of this because the 25th does not have comparable
+         spikes in rides at these times.')
     )
   ),
    
@@ -218,6 +233,10 @@ ui <- navbarPage(
          This provides enough data points to provide a reasonable representation of the 
          data, while simultaneously making certain plots and graphs easier to read."),
       br(),
+      h4("Other Variables/Demographic Information"),
+      h6("The original dataset unfortunately does not contain demographic information,
+         including but not limited to driver/rider gender, age, race/ethnicity, etc."),
+      br(),
       h4("Disclaimer"),
       h6("The Shiny App may take a while to load due to the volume of data points."),
       br(),
@@ -296,9 +315,47 @@ server <- function(input, output) {
       )
   })
   
-  # Creates a ggplot histogram using renderplot. This is the output of the miles
-  # distribution plot in the basic information tab.
+# Create a plot called tipfreqPlot that shows the number of rides called per
+# hour on the different days. Created two datasets called a and b that contain
+# information regarding each date, and then created a "Date" variable for both,
+# that allows you to bind rows but have a differentiating variable. You use this
+# differentiating variable to color the lines by Date, and then create a legend
+# that shows which line is which date.
   
+output$tipfreqPlot <- renderPlot({
+  
+  a <- x %>% 
+    filter(start_date == "2018-12-04") %>% 
+    select(start_hour, start_date) %>% 
+    group_by(start_hour) %>% 
+    count()
+  b <- x %>% 
+    filter(start_date == "2018-12-25") %>% 
+    select(start_hour) %>% 
+    group_by(start_hour) %>% 
+    count()
+  
+  c <- b %>%  mutate(Date = "December 25th, 2018") %>%
+    bind_rows(a %>%
+                mutate(Date = "December 4th, 2018"))
+  
+# Took some advice from Healy's chapters and used a geom_line() plot to show the
+# distribution of rides by hour for each date. As the data shows, there are
+# interesting patterns that emerge from these times.
+    
+  ggplot(data = c, aes(x = start_hour, y = n, color = Date)) + 
+    geom_line() + 
+    labs(title = "Number of Rides Start at each Hour of the Day",
+         subtitle = "Chicago, IL",
+         caption = 'Source: Chicago Data Portal') + 
+    xlab(label = "Trip Start Hour (24 Hr Time)") + 
+    ylab(label = "Number of Rides")
+  
+})
+ 
+# Creates a ggplot histogram using renderplot. This is the output of the miles
+# distribution plot in the basic information tab.
+   
   output$milesDist <- renderPlot({
     
     # the data in use is start_date(), which is the reactive data. Map the x

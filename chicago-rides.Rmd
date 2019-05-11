@@ -14,6 +14,7 @@ library(lubridate)
 library(readr)
 library(hms)
 library(fs)
+library(dplyr)
 ```
 
 ```{r data, message=FALSE, echo=FALSE}
@@ -161,5 +162,33 @@ y <- x[sample(nrow(x), 25000), ]
 
 write_csv(y, "y.csv")
 ```
+
+```{r text, message=FALSE, echo=FALSE}
+    a <- x %>% 
+      filter(start_date == "2018-12-04") %>% 
+      select(start_hour, start_date) %>% 
+      group_by(start_hour) %>% 
+      count()
+    b <- x %>% 
+      filter(start_date == "2018-12-25") %>% 
+      select(start_hour) %>% 
+      group_by(start_hour) %>% 
+      count()
+    
+c <- b %>%  mutate(Date = "December 25th, 2018") %>%
+       bind_rows(a %>%
+           mutate(Date = "December 4th, 2018"))
+
+ggplot(data = c, aes(x = start_hour, y = n, color = Date)) + 
+  geom_line() + 
+  labs(title = "Number of Rides Start at each Hour of the Day",
+       subtitle = "Chicago, IL",
+       caption = 'Source: Chicago Data Portal') + 
+  xlab(label = "Trip Start Hour") + 
+  ylab(label = "Number of Rides")
+
+
+```
+
 
 
