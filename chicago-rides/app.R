@@ -70,7 +70,13 @@ ui <- navbarPage(
            tabPanel(title = "Pickup Locations", 
                     leafletOutput("leafletpickupPlot")),
            tabPanel(title = "Dropoff Locations", 
-                    leafletOutput("leafletdropoffPlot"))
+                    leafletOutput("leafletdropoffPlot")),
+      h6('Adjust the slider on the map to see the number of rides at specific locations
+         throughout the day. Use the check box to select the date of interest.
+         Per the data, darker blue dots show locations throughout the day with a high volume of rides.
+         As the data shows, on both days, there are "hot spots" where rides are constantly
+         being called to—one such location are the airports in Chicago—even during late hours
+         like 3 and 4 AM, rides are still a constant there.')
          )
        )
      )
@@ -159,7 +165,13 @@ ui <- navbarPage(
            tabPanel(
              title = "Trip Fares",
              plotOutput("faresDist"))
-         )
+         ),
+         
+         h6("These distribution tabs show the distribution of number of miles in a trip, 
+              and the total fares of a trip. As the distributions both show, there are large
+            clusters of trip distances within 0 and 5 miles, and trip fares of 0 and 20 
+            dollars. The bins slider can be adjusted to see finer details in then numbers 
+            as well. Overall, the data is skewed right for both dates.")
        )
      )
   ),
