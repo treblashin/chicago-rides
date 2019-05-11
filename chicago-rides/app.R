@@ -324,12 +324,12 @@ server <- function(input, output) {
   
 output$tipfreqPlot <- renderPlot({
   
-  a <- x %>% 
+  a <- y %>% 
     filter(start_date == "2018-12-04") %>% 
     select(start_hour, start_date) %>% 
     group_by(start_hour) %>% 
     count()
-  b <- x %>% 
+  b <- y %>% 
     filter(start_date == "2018-12-25") %>% 
     select(start_hour) %>% 
     group_by(start_hour) %>% 
