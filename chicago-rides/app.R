@@ -214,7 +214,16 @@ ui <- navbarPage(
           
           tabPanel(title = "Trip Distance (Miles)",
                    plotOutput("milestipPlot"))
-        )
+        ),
+      h6("Tip data correlations confirm the natural correlation one might expect  
+         between fares, additional charges, miles and tips. For fare distance
+         and trip miles, fare  distance/trip mile amounts and amount tipped seem 
+         are more spread out. On the other hand, additional charges has a high
+         volume of points on the line where tip amount equals 0. This indicates
+         that riders may not tip as much if additional charges are charged to 
+         the ride in question. If one is charged ten dollars in additional charges,
+         they might be less likely to tip the ride in addition to paying those
+         additional charges.")
       )
     )
   ),
