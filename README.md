@@ -9,5 +9,4 @@ The Shiny App I created allows users to look through different parts of the trip
 
 --
 
-Final project by Albert Shin ('22) for Gov 1005: Data. 
 Source data can be found at the city of Chicago's Data Portal Website. 
