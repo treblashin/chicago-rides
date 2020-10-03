@@ -66,11 +66,10 @@ ui <- navbarPage(
        # ridesharing trips. Users can click on either tab to view either plot.
        
        mainPanel(
-         tabsetPanel(
            tabPanel(title = "Pickup Locations", 
                     leafletOutput("leafletpickupPlot")),
            tabPanel(title = "Dropoff Locations", 
-                    leafletOutput("leafletdropoffPlot")),
+                    leafletOutput("leafletdropoffPlot")
       h6('Adjust the slider on the map to see the number of rides at specific locations
          throughout the day. Use the check box to select the date of interest.
          Per the data, darker blue dots show locations throughout the day with a high volume of rides.
